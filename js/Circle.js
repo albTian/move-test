@@ -6,19 +6,17 @@ export default class Circle {
     constructor(x, y, radius, fill, stroke) {
         this.startingAngle = 0
         this.endAngle = 2 * Math.PI
-        this.x = x
-        this.y = y
 
-        this.dx = 0
-        this.dy = 0
+        this.pos = {x: x, y: y}
+        this.vel = {x: 0, y: 0}
+        this.acc = {x: 0, y: 0}
 
-        this.ax = 0
-        this.ay = 0
-
+        this.forces = []
         this.radius = radius
         this.fill = fill
         this.stroke = stroke
         this.fixed = false
+        this.grabbed = false
 
         // this.ctx = ctx
     }
@@ -26,7 +24,7 @@ export default class Circle {
 
     draw() {
         ctx.beginPath()
-        ctx.arc(this.x, this.y, this.radius, this.startingAngle, this.endAngle)
+        ctx.arc(this.pos.x, this.pos.y, this.radius, this.startingAngle, this.endAngle)
         ctx.fillStyle = this.fill
         ctx.lineWidth = 3
         ctx.fill()
@@ -34,15 +32,30 @@ export default class Circle {
         ctx.stroke()
     }
 
+    // increase the magintude of vel
     speedUp() {
-        this.dx += 1
-        this.dy += 1
+        this.vel.x += Math.sign(this.vel.x)
+        this.vel.y += Math.sign(this.vel.y)
     }
 
-    setSpeed(velocity) {
-        console.log()
-        this.dx = velocity.x
-        this.dy = velocity.y
+    // set the speed to vel
+    setSpeed(vel) {
+        this.vel = vel
+    }
+
+    // set acceleration to
+    setAcceleration(acc) {
+        this.acc = acc
+    }
+
+    addForce(force) {
+        this.forces.push(force)
+    }
+
+    // correct signange is up to the user, not circle.
+    applyForce(force) {
+        this.acc.x += force.x
+        this.acc.y += force.y
     }
 
     update() {
@@ -52,47 +65,40 @@ export default class Circle {
         }
 
         // bounce off walls
-        if (this.x + this.radius > 2560 || this.x + this.radius < 0) {
-            this.dx = -this.dx
+        if (this.pos.x + this.radius > 2560 || this.pos.x + this.radius < 0) {
+            this.vel.x = -this.vel.x
         }
-        if (this.y + this.radius > 1400 || this.y - this.radius < 0) {
-            this.dy = -this.dy
+        if (this.pos.y + this.radius > 1400 || this.pos.y - this.radius < 0) {
+            this.vel.y = -this.vel.y
         }
 
         // update position
-        this.x += this.dx
-        this.y += this.dy
+        this.pos.x += this.vel.x
+        this.pos.y += this.vel.y
 
         // updates velocity
-        this.dx += this.ax
-        this.dy += this.ay
+        this.vel.x += this.acc.x
+        this.vel.y += this.acc.y
 
-        // reset acceleration
-        this.ax = 0
-        this.ay = 0
+        // resets acceleration and forces
+        this.acc = {x: 0, y: 0}
+        
+        for (const force of this.forces) {
+            this.acc.x += force.x
+            this.acc.y += force.y
+        }
+        
+        // resets the forces
+        this.forces = []
+
 
         // dampening
-        var frictionx = -Math.sign(this.dx) * Math.abs(this.dx) * utils.friction
-        var frictiony = -Math.sign(this.dy) * Math.abs(this.dy) * utils.friction
-
-        // gravity
-        var distx = this.x - planet.x
-        var disty = this.y - planet.y
-        // console.log(distx)
-        // console.log(disty)
-        
-        var distTotal = Math.hypot(distx, disty)
-        // console.log(distTotal)
-        this.ax = -(distx / Math.pow(distTotal, 2)) * utils.bigG + frictionx
-        this.ay = -(disty / Math.pow(distTotal, 2)) * utils.bigG + frictiony
-        console.log(this.ax)
-        console.log(this.ay)
-
-        // var distx = planet.x - this.x
-        // var disty = planet.y - this.y
-
-        // this.ax = Math.sign(distx) * .5
-        // this.ay = Math.sign(disty) * .5
+        // var friction = {
+        //     x: -Math.sign(this.vel.x) * Math.abs(this.vel.x) * utils.friction,
+        //     y: -Math.sign(this.vel.y) * Math.abs(this.vel.y) * utils.friction
+        // }
+        // var frictionx = -Math.sign(this.vel.x) * Math.abs(this.vel.x) * utils.friction
+        // var frictiony = -Math.sign(this.vel.y) * Math.abs(this.vel.y) * utils.friction
 
         this.draw()
     }

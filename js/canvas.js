@@ -1,5 +1,8 @@
 import Circle from './Circle.js'
 import Buffer from './Buffer.js'
+import Cluster from './Cluster.js'
+import * as utils from './utils.js'
+ 
 
 
 //reference to the canvas element
@@ -30,10 +33,6 @@ var isMouseDown
 // array for everything that needs to be drawn
 var toDraw = []
 
-// Position buffers for x and y
-var bufferx = new Buffer(10, 0)
-var buffery = new Buffer(10, 0)
-
 var mouseBuffer = new Buffer(10, 0)
 
 //main draw method
@@ -43,11 +42,46 @@ function draw() {
     drawCircles()
 }
 
-//draw circles
+// // gravity
+// var distx = this.pos.x - planet.pos.x
+// var disty = this.pos.y - planet.pos.y
+
+
+// var distTotal = Math.hypot(distx, disty)
+// this.acc.x = -(distx / Math.pow(distTotal, 2)) * utils.bigG + frictionx
+// this.acc.y = -(disty / Math.pow(distTotal, 2)) * utils.bigG + frictiony
+
+function applyFriction(circle) {
+    var friction = {}
+    friction.x = -Math.sign(circle.vel.x) * Math.abs(circle.vel.x) * utils.friction
+    friction.y = -Math.sign(circle.vel.y) * Math.abs(circle.vel.y) * utils.friction
+    circle.addForce(friction)
+}
+
+function applyGravity(circle) {
+    // hard coded planet
+    var distx = circle.pos.x - planet.pos.x
+    var disty = circle.pos.y - planet.pos.y
+    var distTotal = Math.hypot(distx, disty)
+
+    var gravity = {}
+    gravity.x = -(distx / Math.pow(distTotal, 2)) * utils.bigG
+    gravity.y = -(disty / Math.pow(distTotal, 2)) * utils.bigG
+    circle.addForce(gravity)
+}
+
+// applies the universal forces and draws circles
 function drawCircles() {
-    for (var i = circleArray.length - 1; i >= 0; i--) {
-        circleArray[i].update()
+    for (const circle of circleArray) {
+        applyFriction(circle)
+        applyGravity(circle)
+        // var friction = {}
+        // friction.x = -Math.sign(circle.vel.x) * Math.abs(circle.vel.x) * utils.friction
+        // friction.y = -Math.sign(circle.vel.y) * Math.abs(circle.vel.y) * utils.friction
+        // circle.addForce(friction)
+        circle.update()
     }
+
 }
 
 function move(e) {
@@ -60,13 +94,15 @@ function move(e) {
 
     //if any circle is focused
     if (focused.state) {
-        circleArray[focused.key].x = mousePosition.x
-        circleArray[focused.key].y = mousePosition.y
+        // circleArray[focused.key].pos.x = mousePosition.x
+        // circleArray[focused.key].pos.y = mousePosition.y
+        circleArray[focused.key].pos = mousePosition
+        circleArray[focused.key].fixed = true
         // draw()
         return
     }
 
-    //no circle currently focused check if circle is hovered
+    // no circle currently focused check if circle is hovered
     // to check if circle is hovered. If so, set focused to true then this won't run again
     for (var i = 0; i < circleArray.length; i++) {
         if (intersects(circleArray[i])) {
@@ -85,9 +121,11 @@ function setDraggable(e) {
         isMouseDown = true
     } else if (t === "mouseup") {
         isMouseDown = false
-        // releasing a circle
+
+        // throwing a circle
         if (focused.state) {
-            circleArray[0].setSpeed(mouseBuffer.instantVelocity())
+            circleArray[focused.key].fixed = false
+            circleArray[focused.key].setSpeed(mouseBuffer.instantVelocity())
         }
         releaseFocus()
     }
@@ -109,8 +147,8 @@ function getMousePosition(e) {
 function intersects(circle) {
     // subtract the x, y coordinates from the mouse position to get coordinates 
     // for the hotspot location and check against the area of the radius
-    var areaX = mousePosition.x - circle.x
-    var areaY = mousePosition.y - circle.y
+    var areaX = mousePosition.x - circle.pos.x
+    var areaY = mousePosition.y - circle.pos.y
     //return true if x^2 + y^2 <= radius squared.
     return areaX * areaX + areaY * areaY <= circle.radius * circle.radius
 }
@@ -136,6 +174,7 @@ var circleArray = [c1, c2, c3]
 export var planet = new Circle(500, 500, 50, "black", "black")
 planet.fixed = true
 
+var cluster1 = new Cluster(500, 500)
 
 
 function animate() {
