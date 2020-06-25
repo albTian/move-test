@@ -24,7 +24,26 @@ export default class Buffer {
     }
 
     dummyVelocity() {
-        return (this.buffer[this.buffer.length - 1] - this.buffer[0]) / 2
+        const firstPos = this.buffer[0]
+        const lastPos = this.buffer[this.buffer.length - 1]
+
+        var velocity = {
+            x: (lastPos.x - firstPos.x) / 2,
+            y: (lastPos.y - firstPos.y) / 2
+        }
+        console.log(velocity)
+        return velocity
+    }
+
+    instantVelocity() {
+        const firstPos = this.buffer[this.buffer.length - 2]
+        const lastPos = this.buffer[this.buffer.length - 1]
+
+        var velocity = {
+            x: (lastPos.x - firstPos.x) / 2,
+            y: (lastPos.y - firstPos.y) / 2
+        }
+        return velocity
     }
 
     avgVelocity() {
