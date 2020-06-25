@@ -1,3 +1,4 @@
-const friction = .01
+const friction = .02
+const bigG = 100
 
-export {friction}
+export {friction, bigG}

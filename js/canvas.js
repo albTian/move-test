@@ -8,7 +8,8 @@ c.width = window.innerWidth
 c.height = window.innerHeight
 
 //reference to 2d context
-const ctx = c.getContext("2d")
+export const ctx = c.getContext("2d")
+
 
 //add listeners
 document.addEventListener('mousemove', move, false)
@@ -125,19 +126,22 @@ Array.prototype.move = function (old_index, new_index) {
 }
 
 //make some circles
-var c1 = new Circle(50, 50, 50, "red", "black", ctx)
-var c2 = new Circle(200, 50, 50, "green", "black", ctx)
-var c3 = new Circle(350, 50, 50, "blue", "black", ctx)
+var c1 = new Circle(50, 50, 50, "red", "black")
+var c2 = new Circle(200, 50, 50, "green", "black")
+var c3 = new Circle(350, 50, 50, "blue", "black")
 
 //initialise our circles
 var circleArray = [c1, c2, c3]
+
+export var planet = new Circle(500, 500, 50, "black", "black")
+planet.fixed = true
 
 
 
 function animate() {
     requestAnimationFrame(animate)
     ctx.clearRect(0, 0, innerWidth, innerHeight)
-
+    planet.update()
     drawCircles()
 
 }
