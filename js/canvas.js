@@ -51,12 +51,6 @@ function draw() {
 // this.acc.x = -(distx / Math.pow(distTotal, 2)) * utils.bigG + frictionx
 // this.acc.y = -(disty / Math.pow(distTotal, 2)) * utils.bigG + frictiony
 
-function applyFriction(circle) {
-    var friction = {}
-    friction.x = -Math.sign(circle.vel.x) * Math.abs(circle.vel.x) * utils.friction
-    friction.y = -Math.sign(circle.vel.y) * Math.abs(circle.vel.y) * utils.friction
-    circle.addForce(friction)
-}
 
 function applyGravity(circle) {
     // hard coded planet
@@ -70,32 +64,35 @@ function applyGravity(circle) {
     circle.addForce(gravity)
 }
 
-// applies the universal forces and draws circles
+// updates and draws circles
 function drawCircles() {
     for (const circle of circleArray) {
-        applyFriction(circle)
-        applyGravity(circle)
-        // var friction = {}
-        // friction.x = -Math.sign(circle.vel.x) * Math.abs(circle.vel.x) * utils.friction
-        // friction.y = -Math.sign(circle.vel.y) * Math.abs(circle.vel.y) * utils.friction
-        // circle.addForce(friction)
         circle.update()
     }
 
 }
 
+function drawClusters() {
+    for (const cluster of clusterArray) {
+        cluster.draw()
+    }
+}
+
+// When the mouse moves
 function move(e) {
+    getMousePosition(e)
+    for (var cluster of clusterArray) {
+        cluster.hover = intersects(cluster)
+    }
     if (!isMouseDown) {
         return
     }
-    getMousePosition(e)
+    
 
     mouseBuffer.addValue(mousePosition)
 
     //if any circle is focused
     if (focused.state) {
-        // circleArray[focused.key].pos.x = mousePosition.x
-        // circleArray[focused.key].pos.y = mousePosition.y
         circleArray[focused.key].pos = mousePosition
         circleArray[focused.key].fixed = true
         // draw()
@@ -144,7 +141,7 @@ function getMousePosition(e) {
 }
 
 //detects whether the mouse cursor is between x and y relative to the radius specified
-function intersects(circle) {
+export function intersects(circle) {
     // subtract the x, y coordinates from the mouse position to get coordinates 
     // for the hotspot location and check against the area of the radius
     var areaX = mousePosition.x - circle.pos.x
@@ -152,6 +149,8 @@ function intersects(circle) {
     //return true if x^2 + y^2 <= radius squared.
     return areaX * areaX + areaY * areaY <= circle.radius * circle.radius
 }
+
+ 
 
 Array.prototype.move = function (old_index, new_index) {
     if (new_index >= this.length) {
@@ -163,24 +162,50 @@ Array.prototype.move = function (old_index, new_index) {
     this.splice(new_index, 0, this.splice(old_index, 1)[0])
 }
 
+const transRed = "rgba(255, 0, 0, .5)"
+
 //make some circles
-var c1 = new Circle(50, 50, 50, "red", "black")
-var c2 = new Circle(200, 50, 50, "green", "black")
-var c3 = new Circle(350, 50, 50, "blue", "black")
+var c1 = new Circle(50, 50, 50, transRed, "red")
+var c2 = new Circle(200, 50, 50, transRed, "black")
+var c3 = new Circle(350, 50, 50, transRed, "black")
+var c4 = new Circle(350, 50, 50, transRed, "black")
+var c5 = new Circle(350, 50, 50, transRed, "black")
+
+var c6 = new Circle(50, 50, 50, transRed, "black")
+var c7 = new Circle(200, 50, 50, transRed, "black")
+var c8 = new Circle(350, 50, 50, transRed, "black")
+var c9 = new Circle(350, 50, 50, transRed, "black")
+var c10 = new Circle(350, 50, 50, transRed, "black")
 
 //initialise our circles
-var circleArray = [c1, c2, c3]
+var circleArray = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10]
 
 export var planet = new Circle(500, 500, 50, "black", "black")
-planet.fixed = true
+// planet.fixed = true
 
-var cluster1 = new Cluster(500, 500)
+var cluster1 = new Cluster(200, 200)
+cluster1.add(c1)
+cluster1.add(c2)
+cluster1.add(c3)
+cluster1.add(c4)
+cluster1.add(c5)
+
+var cluster2 = new Cluster(700, 700)
+cluster2.add(c6)
+cluster2.add(c7)
+cluster2.add(c8)
+cluster2.add(c9)
+cluster2.add(c10)
+
+
+export var clusterArray = [cluster1, cluster2]
 
 
 function animate() {
     requestAnimationFrame(animate)
     ctx.clearRect(0, 0, innerWidth, innerHeight)
-    planet.update()
+    // planet.update()
+    drawClusters()
     drawCircles()
 
 }

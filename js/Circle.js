@@ -1,11 +1,10 @@
 import * as utils from './utils.js'
-import { ctx, planet } from './canvas.js'
+import { ctx, planet, clusterArray } from './canvas.js'
 
 
 export default class Circle {
     constructor(x, y, radius, fill, stroke) {
-        this.startingAngle = 0
-        this.endAngle = 2 * Math.PI
+
 
         this.pos = {x: x, y: y}
         this.vel = {x: 0, y: 0}
@@ -24,12 +23,12 @@ export default class Circle {
 
     draw() {
         ctx.beginPath()
-        ctx.arc(this.pos.x, this.pos.y, this.radius, this.startingAngle, this.endAngle)
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI)
         ctx.fillStyle = this.fill
         ctx.lineWidth = 3
         ctx.fill()
-        ctx.strokeStyle = this.stroke
-        ctx.stroke()
+        // ctx.strokeStyle = this.stroke
+        // ctx.stroke()
     }
 
     // increase the magintude of vel
@@ -38,15 +37,13 @@ export default class Circle {
         this.vel.y += Math.sign(this.vel.y)
     }
 
+    setPos(pos) { this.pos = pos }
+
     // set the speed to vel
-    setSpeed(vel) {
-        this.vel = vel
-    }
+    setSpeed(vel) { this.vel = vel }
 
     // set acceleration to
-    setAcceleration(acc) {
-        this.acc = acc
-    }
+    setAcceleration(acc) { this.acc = acc }
 
     addForce(force) {
         this.forces.push(force)
@@ -82,6 +79,7 @@ export default class Circle {
 
         // resets acceleration and forces
         this.acc = {x: 0, y: 0}
+        utils.applyFriction(this)
         
         for (const force of this.forces) {
             this.acc.x += force.x
