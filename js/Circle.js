@@ -1,5 +1,5 @@
 import * as utils from './utils.js'
-import { ctx, planet, clusterArray } from './canvas.js'
+import { ctx } from './canvas.js'
 
 
 export default class Circle {

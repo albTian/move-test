@@ -1,5 +1,5 @@
 const friction = .005
-const bigG = 499
+const bigG = 400
 
 function applyFriction(circle) {
     var friction = {}
@@ -8,4 +8,19 @@ function applyFriction(circle) {
     circle.addForce(friction)
 }
 
-export {friction, bigG, applyFriction}
+function applyGravity(circle, planet) {
+    // hard coded planet
+    var distx = circle.pos.x - planet.pos.x
+    var disty = circle.pos.y - planet.pos.y
+    var distTotal = Math.hypot(distx, disty)
+
+    var gravity = {
+        x: -(distx / Math.pow(distTotal, 2)) * bigG * planet.cluster.length,
+        y: -(disty / Math.pow(distTotal, 2)) * bigG * planet.cluster.length
+    }
+    // gravity.x = -(distx / Math.pow(distTotal, 2)) * bigG
+    // gravity.y = -(disty / Math.pow(distTotal, 2)) * bigG
+    circle.addForce(gravity)
+}
+
+export {friction, bigG, applyFriction, applyGravity}

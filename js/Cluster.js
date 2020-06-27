@@ -1,4 +1,4 @@
-import { ctx, planet, intersects } from './canvas.js'
+import { ctx, intersects } from './canvas.js'
 
 export default class Cluster {
     constructor(x, y) {
@@ -14,7 +14,7 @@ export default class Cluster {
 
     nextSquareRoot(num) {
         if (Math.floor(Math.sqrt()) === Math.sqrt()) {
-            return Math.floor(Math.sqrt(num))
+            return Math.floor(Math.sqrt(num)) 
         } else {
             return Math.floor(Math.sqrt(num)) + 1
         }
@@ -48,6 +48,7 @@ export default class Cluster {
                 this.cluster[index].setPos({x: this.pos.x + sizeX + 50, y: this.pos.y + sizeY + 50})
                 this.cluster[index].setSpeed({x: 0, y: 0})
                 this.cluster[index].setAcceleration({x: 0, y: 0})
+                this.cluster[index].fixed = true
                 sizeX += 100
                 index++
             }
@@ -56,10 +57,27 @@ export default class Cluster {
     }
 
     // boolean of a circle is within this cluster
-    within(circle) {
+    circleWithin(circle) {
         var areaX = circle.pos.x - this.pos.x
         var areaY = circle.pos.y - this.pos.y
         return areaX * areaX + areaY * areaY <= this.radius * this.radius
+    }
+
+    // larger radius within
+    circleWithinLarge(circle) {
+        var areaX = circle.pos.x - this.pos.x
+        var areaY = circle.pos.y - this.pos.y
+        return areaX * areaX + areaY * areaY <= this.radius * this.radius
+    }
+
+    // returns the circle being grabed
+    grab() {
+        for (const circle of this.cluster) {
+            if (intersects(circle)) {
+                this.remove(circle)
+                return circle
+            }
+        }
     }
     
 
@@ -77,16 +95,18 @@ export default class Cluster {
         ctx.stroke()
 
         for (const circle of this.cluster) {
-            if (!this.within(circle)) {
-                this.remove(circle)
-                this.arrange()
-            }
+            // if (!this.circleWithin(circle)) {
+            //     // console.log('removed')
+            //     this.remove(circle)
+            // }
+            circle.update()
         }
 
     }
 
     remove(circle) {
         this.cluster.splice(this.cluster.indexOf(circle), 1)
+        this.arrange()
     }
 
     add(circle) {

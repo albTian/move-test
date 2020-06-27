@@ -2,8 +2,6 @@ import Circle from './Circle.js'
 import Buffer from './Buffer.js'
 import Cluster from './Cluster.js'
 import * as utils from './utils.js'
- 
-
 
 //reference to the canvas element
 const c = document.querySelector("canvas")
@@ -25,10 +23,19 @@ var focused = {
     state: false
 }
 
-//track mouse position on mousemove
+// object with x:0, y: 0
+const zero = {
+    x: 0,
+    y: 0
+}
+
+// track mouse position on mousemove
 var mousePosition
-//track state of mousedown and up
+// track state of mousedown and up
 var isMouseDown
+
+// currently grabbed circle
+var grabbedCircle
 
 // array for everything that needs to be drawn
 var toDraw = []
@@ -51,32 +58,19 @@ function draw() {
 // this.acc.x = -(distx / Math.pow(distTotal, 2)) * utils.bigG + frictionx
 // this.acc.y = -(disty / Math.pow(distTotal, 2)) * utils.bigG + frictiony
 
-
-function applyGravity(circle) {
-    // hard coded planet
-    var distx = circle.pos.x - planet.pos.x
-    var disty = circle.pos.y - planet.pos.y
-    var distTotal = Math.hypot(distx, disty)
-
-    var gravity = {}
-    gravity.x = -(distx / Math.pow(distTotal, 2)) * utils.bigG
-    gravity.y = -(disty / Math.pow(distTotal, 2)) * utils.bigG
-    circle.addForce(gravity)
-}
-
 // updates and draws circles
-function drawCircles() {
-    for (const circle of circleArray) {
-        circle.update()
-    }
+// function drawCircles() {
+//     for (const circle of circleArray) {
+//         circle.update()
+//     }
 
-}
+// }
 
-function drawClusters() {
-    for (const cluster of clusterArray) {
-        cluster.draw()
-    }
-}
+// function drawClusters() {
+//     for (const cluster of clusterArray) {
+//         cluster.draw()
+//     }
+// }
 
 // When the mouse moves
 function move(e) {
@@ -87,27 +81,38 @@ function move(e) {
     if (!isMouseDown) {
         return
     }
-    
 
     mouseBuffer.addValue(mousePosition)
 
     //if any circle is focused
     if (focused.state) {
-        circleArray[focused.key].pos = mousePosition
-        circleArray[focused.key].fixed = true
+        grabbedCircle.pos = mousePosition
+        grabbedCircle.fixed = true
         // draw()
         return
     }
 
     // no circle currently focused check if circle is hovered
     // to check if circle is hovered. If so, set focused to true then this won't run again
-    for (var i = 0; i < circleArray.length; i++) {
-        if (intersects(circleArray[i])) {
-            circleArray.move(i, 0)
-            focused.state = true
-            break
+
+    // loop within cluster, not circle array
+    for (const cluster of clusterArray) {
+        if (intersects(cluster)) {
+            grabbedCircle = cluster.grab()
+            if (grabbedCircle) {
+                grabbedCircle.pos = mousePosition
+                grabbedCircle.fixed = true
+                focused.state = true
+                break
+            }
         }
     }
+    if (grabbedCircle !== null && grabbedCircle !== undefined && intersects(grabbedCircle)) {
+        grabbedCircle.pos = mousePosition
+        grabbedCircle.fixed = true
+        focused.state = true
+    }
+
     // draw()
 }
 
@@ -121,8 +126,13 @@ function setDraggable(e) {
 
         // throwing a circle
         if (focused.state) {
-            circleArray[focused.key].fixed = false
-            circleArray[focused.key].setSpeed(mouseBuffer.instantVelocity())
+            // console.log(grabbedCircle)
+            clusterArray.map(cluster => {
+                utils.applyGravity(grabbedCircle, cluster)
+            })
+            // utils.applyGravity(grabbedCircle, cluster1)
+            grabbedCircle.fixed = false
+            grabbedCircle.setSpeed(mouseBuffer.instantVelocity())
         }
         releaseFocus()
     }
@@ -150,7 +160,13 @@ export function intersects(circle) {
     return areaX * areaX + areaY * areaY <= circle.radius * circle.radius
 }
 
- 
+function addCluster(x, y) {
+    var cunt = new Cluster(x, y)
+    // console.log(cluster.grab)
+    clusterArray.push(cunt)
+}
+
+
 
 Array.prototype.move = function (old_index, new_index) {
     if (new_index >= this.length) {
@@ -164,50 +180,72 @@ Array.prototype.move = function (old_index, new_index) {
 
 const transRed = "rgba(255, 0, 0, .5)"
 
-//make some circles
-var c1 = new Circle(50, 50, 50, transRed, "red")
-var c2 = new Circle(200, 50, 50, transRed, "black")
-var c3 = new Circle(350, 50, 50, transRed, "black")
-var c4 = new Circle(350, 50, 50, transRed, "black")
-var c5 = new Circle(350, 50, 50, transRed, "black")
-
-var c6 = new Circle(50, 50, 50, transRed, "black")
-var c7 = new Circle(200, 50, 50, transRed, "black")
-var c8 = new Circle(350, 50, 50, transRed, "black")
-var c9 = new Circle(350, 50, 50, transRed, "black")
-var c10 = new Circle(350, 50, 50, transRed, "black")
-
-//initialise our circles
-var circleArray = [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10]
-
-export var planet = new Circle(500, 500, 50, "black", "black")
-// planet.fixed = true
-
-var cluster1 = new Cluster(200, 200)
-cluster1.add(c1)
-cluster1.add(c2)
-cluster1.add(c3)
-cluster1.add(c4)
-cluster1.add(c5)
-
-var cluster2 = new Cluster(700, 700)
-cluster2.add(c6)
-cluster2.add(c7)
-cluster2.add(c8)
-cluster2.add(c9)
-cluster2.add(c10)
 
 
-export var clusterArray = [cluster1, cluster2]
+export var clusterArray = []
 
+function setup() {
+    //make some circles
+    var c1 = new Circle(50, 50, 50, transRed, "red")
+    var c2 = new Circle(200, 50, 50, transRed, "black")
+    var c3 = new Circle(350, 50, 50, transRed, "black")
+    var c4 = new Circle(350, 50, 50, transRed, "black")
+    var c5 = new Circle(350, 50, 50, transRed, "black")
+
+    var c6 = new Circle(50, 50, 50, transRed, "black")
+    var c7 = new Circle(200, 50, 50, transRed, "black")
+    var c8 = new Circle(350, 50, 50, transRed, "black")
+    var c9 = new Circle(350, 50, 50, transRed, "black")
+    var c10 = new Circle(350, 50, 50, transRed, "black")
+
+    var cluster1 = new Cluster(200, 200)
+    cluster1.add(c1)
+    cluster1.add(c2)
+    cluster1.add(c3)
+    cluster1.add(c4)
+    cluster1.add(c5)
+
+    var cluster2 = new Cluster(700, 700)
+    cluster2.add(c6)
+    cluster2.add(c7)
+    cluster2.add(c8)
+    cluster2.add(c9)
+    cluster2.add(c10)
+
+    clusterArray.push(cluster1)
+    clusterArray.push(cluster2)
+}
 
 function animate() {
     requestAnimationFrame(animate)
     ctx.clearRect(0, 0, innerWidth, innerHeight)
-    // planet.update()
-    drawClusters()
-    drawCircles()
+    for (const cluster of clusterArray) {
+        if (cluster.cluster.length === 0) {
+            clusterArray.splice(clusterArray.indexOf(cluster), 1)
+        } else {
+            cluster.draw()
+        }
+    }
+    if (grabbedCircle) {
+        grabbedCircle.update()
+        for (const cluster of clusterArray) {
+            if (grabbedCircle !== null && cluster.circleWithinLarge(grabbedCircle) && !focused.state) {
+                cluster.add(grabbedCircle)
+                grabbedCircle.fixed = true
+                grabbedCircle = null
+                // new circle, use mouse calculations
+            } else if (grabbedCircle !== null && !isMouseDown &&
+                Math.abs(grabbedCircle.vel.x) < 4 && Math.abs(grabbedCircle.vel.y) < 4) {
+                addCluster(grabbedCircle.pos.x, grabbedCircle.pos.y)
+                clusterArray[clusterArray.length - 1].add(grabbedCircle)
+                grabbedCircle.fixed = true
+                grabbedCircle = null
+            }
+        }
+    }
+    // drawCircles()
 
 }
 
+setup()
 animate()
