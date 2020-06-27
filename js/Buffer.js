@@ -2,11 +2,7 @@ export default class Buffer {
     constructor(size, layers) {
         this.size = size
         this.buffer = []
-        // if (layers) {
-        //     this.vbuffer = new Buffer(size - 1, layers - 1)
-        // } else {
-        //     this.vbuffer = {addValue: () => null}
-        // }
+
         this.vbuffer = []
     }
 

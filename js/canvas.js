@@ -218,6 +218,8 @@ function setup() {
 
 function animate() {
     requestAnimationFrame(animate)
+    getMousePosition(e)
+    mouseBuffer.addValue(mousePosition)
     ctx.clearRect(0, 0, innerWidth, innerHeight)
     for (const cluster of clusterArray) {
         if (cluster.cluster.length === 0) {
@@ -233,7 +235,7 @@ function animate() {
                 cluster.add(grabbedCircle)
                 grabbedCircle.fixed = true
                 grabbedCircle = null
-                // new circle, use mouse calculations
+                // new circle, use mouse calculations instead of this shit
             } else if (grabbedCircle !== null && !isMouseDown &&
                 Math.abs(grabbedCircle.vel.x) < 4 && Math.abs(grabbedCircle.vel.y) < 4) {
                 addCluster(grabbedCircle.pos.x, grabbedCircle.pos.y)
