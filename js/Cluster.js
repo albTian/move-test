@@ -1,4 +1,6 @@
+import * as utils from './utils.js'
 import { ctx, intersects } from './canvas.js'
+
 
 export default class Cluster {
     constructor(x, y) {
@@ -12,18 +14,11 @@ export default class Cluster {
         this.hover = false
     }
 
-    nextSquareRoot(num) {
-        if (Math.floor(Math.sqrt()) === Math.sqrt()) {
-            return Math.floor(Math.sqrt(num)) 
-        } else {
-            return Math.floor(Math.sqrt(num)) + 1
-        }
-    }
 
     getArrangement() {
         var num = this.cluster.length
         var arrangement = []
-        var nsr = this.nextSquareRoot(num)
+        var nsr = utils.nextSquareRoot(num)
         
         while (num !== 0) {
             var row = Math.min(nsr, num)
@@ -45,10 +40,9 @@ export default class Cluster {
 
             var sizeX = -(arrangement[row] * 100) / 2
             for (var i = 0; i < arrangement[row]; i++) {
-                this.cluster[index].setPos({x: this.pos.x + sizeX + 50, y: this.pos.y + sizeY + 50})
-                this.cluster[index].setSpeed({x: 0, y: 0})
-                this.cluster[index].setAcceleration({x: 0, y: 0})
-                this.cluster[index].fixed = true
+                // replace next line with moveTo
+                this.cluster[index].fixed = false
+                this.cluster[index].moveTo({x: this.pos.x + sizeX + 50, y: this.pos.y + sizeY + 50})
                 sizeX += 100
                 index++
             }
@@ -84,7 +78,7 @@ export default class Cluster {
 
 
     draw() {
-        this.radius = 2*this.nextSquareRoot(this.cluster.length)*50/Math.sqrt(2)
+        this.radius = 2* utils.nextSquareRoot(this.cluster.length)*50/Math.sqrt(2)
         
         ctx.beginPath()
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI)
@@ -95,10 +89,6 @@ export default class Cluster {
         ctx.stroke()
 
         for (const circle of this.cluster) {
-            // if (!this.circleWithin(circle)) {
-            //     // console.log('removed')
-            //     this.remove(circle)
-            // }
             circle.update()
         }
 
@@ -112,5 +102,9 @@ export default class Cluster {
     add(circle) {
         this.cluster.push(circle)
         this.arrange()
+    }
+
+    setPos(pos) {
+        this.pos = pos
     }
 }

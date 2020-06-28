@@ -19,6 +19,20 @@ export default class Buffer {
         }
     }
 
+    isZero() {
+        // checks if this buffer contains zero
+        for (const value of this.buffer) {
+            if (value.x === 0 || value.y === 0) {
+                return true
+            }
+        }
+        return false
+    }
+
+    sharpTurn() {
+        return false
+    }
+
     dummyVelocity() {
         const firstPos = this.buffer[0]
         const lastPos = this.buffer[this.buffer.length - 1]
@@ -27,7 +41,6 @@ export default class Buffer {
             x: (lastPos.x - firstPos.x) / 2,
             y: (lastPos.y - firstPos.y) / 2
         }
-        console.log(velocity)
         return velocity
     }
 

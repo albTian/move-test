@@ -10,6 +10,8 @@ export default class Circle {
         this.vel = {x: 0, y: 0}
         this.acc = {x: 0, y: 0}
 
+        this.dest = null
+
         this.forces = []
         this.radius = radius
         this.fill = fill
@@ -27,24 +29,19 @@ export default class Circle {
         ctx.fillStyle = this.fill
         ctx.lineWidth = 3
         ctx.fill()
-        // ctx.strokeStyle = this.stroke
-        // ctx.stroke()
     }
 
-    // increase the magintude of vel
-    speedUp() {
-        this.vel.x += Math.sign(this.vel.x)
-        this.vel.y += Math.sign(this.vel.y)
+    // animates this to a point. used in rearange
+    moveTo(point) {
+        if (!this.fixed) {
+            this.reset()
+            this.dest = point
+        }
+        // this.pos = point
+        // this.fixed = true
     }
 
-    setPos(pos) { this.pos = pos }
-
-    // set the speed to vel
-    setSpeed(vel) { this.vel = vel }
-
-    // set acceleration to
-    setAcceleration(acc) { this.acc = acc }
-
+    // adds a force to be applied next time step
     addForce(force) {
         this.forces.push(force)
     }
@@ -55,12 +52,20 @@ export default class Circle {
         this.acc.y += force.y
     }
 
+    reset() {
+        // console.log('reset')
+        this.vel = {x: 0, y: 0}
+        this.acc = {x: 0, y: 0}
+    }
+
     update() {
         if (this.fixed) {
+            this.reset()
             this.draw()
             return
         }
 
+        
         // bounce off walls
         if (this.pos.x + this.radius > 2560 || this.pos.x + this.radius < 0) {
             this.vel.x = -this.vel.x
@@ -68,36 +73,42 @@ export default class Circle {
         if (this.pos.y + this.radius > 1400 || this.pos.y - this.radius < 0) {
             this.vel.y = -this.vel.y
         }
-
-        // update position
-        this.pos.x += this.vel.x
-        this.pos.y += this.vel.y
+        // friction applies to all circles, all the time
+        utils.applyFriction(this, .01)
+        
+        this.forces.map(force => this.applyForce(force))
 
         // updates velocity
         this.vel.x += this.acc.x
         this.vel.y += this.acc.y
-
+        
+        // update position
+        this.pos.x += this.vel.x
+        this.pos.y += this.vel.y
+        
         // resets acceleration and forces
         this.acc = {x: 0, y: 0}
-        utils.applyFriction(this)
-        
-        for (const force of this.forces) {
-            this.acc.x += force.x
-            this.acc.y += force.y
-        }
         
         // resets the forces
         this.forces = []
+        
+        
+        if (this.dest) {
+            // this.pos = this.dest
+            var fakePlanet = {
+                pos: this.dest
+            }
+            utils.applyPull(this, this.dest)
+            if (utils.dist(this.pos, this.dest) < 4) {
+                this.pos = this.dest
+                this.dest = null
+                this.fixed = true
+            }
+            // this.dest = null
+            // this.fixed = true
+            // return
 
-
-        // dampening
-        // var friction = {
-        //     x: -Math.sign(this.vel.x) * Math.abs(this.vel.x) * utils.friction,
-        //     y: -Math.sign(this.vel.y) * Math.abs(this.vel.y) * utils.friction
-        // }
-        // var frictionx = -Math.sign(this.vel.x) * Math.abs(this.vel.x) * utils.friction
-        // var frictiony = -Math.sign(this.vel.y) * Math.abs(this.vel.y) * utils.friction
-
+        }
         this.draw()
     }
 }
